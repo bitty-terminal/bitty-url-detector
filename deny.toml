@@ -1,0 +1,29 @@
+# Supply-chain approval for bitty-url-detector.
+#
+# The workspace has no runtime dependencies (zero-dependency detector guarantee:
+# the shipped crate depends only on `std`). Run `cargo deny check` to verify;
+# CI enforces it (Supply chain job).
+
+[graph]
+features = []
+
+[advisories]
+yanked = "deny"
+
+[licenses]
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "Unicode-3.0",
+    "Unlicense",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

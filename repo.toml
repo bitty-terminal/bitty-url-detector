@@ -1,0 +1,20 @@
+# bitty-url-detector: workspace identity descriptor (kind/lang/role mirror workspace.toml).
+[repo]
+name = "bitty-url-detector"
+kind = "extension"
+lang = "rust"
+role = "pure-algorithm plaintext URL detector for Bitty #1760 (hand-rolled scanner over &str, no terminal/GPU types)"
+owner = "bitty-core"
+docs = "bitty-terminal-docs"
+
+[bootstrap]
+version = "0.0.1"
+edition = "2024"
+rust_version = "1.85"
+status = "initial detector implementation"
+
+[contracts.provides]
+url-detector = "crates/bitty-url-detector" # pure function detect_urls(&str) -> Vec<(col_start, col_end, url)>; zero dependencies, forbid(unsafe)
+
+[contracts.consumes]
+url-requirement = "bitty#1760" # plaintext URL pattern detection and interactive click-to-open (scanner side only; Core wiring is separate)

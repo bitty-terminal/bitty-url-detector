@@ -1,0 +1,23 @@
+[package]
+name = "bitty-url-detector"
+description = "Pure-algorithm plaintext URL detector for Bitty (bitty#1760): hand-rolled scanner over &str, no terminal/GPU types"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords = ["url", "detector", "terminal", "bitty"]
+categories = ["text-processing", "parsing"]
+publish = true
+
+[lints]
+workspace = true
+
+# Deliberately dependency-free: the detector is consumed by Bitty Core, which
+# must not pull a new transitive tree for pattern scanning. `std` only.
+[dependencies]
+
+[[bench]]
+name = "scan"
+path = "../../benches/scan.rs"
+harness = false
