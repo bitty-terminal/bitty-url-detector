@@ -660,4 +660,50 @@ mod tests {
             assert_eq!(input.get(*s..*e), Some(url.as_str()));
         }
     }
+
+    #[test]
+    fn crlf_endings_terminate_and_split_matches() {
+        let input = "line1\r\nhttps://example.com/a\r\nline2";
+        let (s, e, url) = one(input);
+        assert_eq!(url, "https://example.com/a");
+        assert_eq!(input.get(s..e), Some(url.as_str()));
+        let two = detect_urls("http://a.example\r\nhttp://b.example");
+        assert_eq!(two.len(), 2);
+        assert_eq!(two[0].2, "http://a.example");
+        assert_eq!(two[1].2, "http://b.example");
+    }
+
+    #[test]
+    fn tab_and_newline_boundaries() {
+        let input = "a\thttps://example.com/x\tb";
+        let (s, e, url) = one(input);
+        assert_eq!(url, "https://example.com/x");
+        assert_eq!(input.get(s..e), Some(url.as_str()));
+        assert!(detect_urls("http://\texample.com").is_empty());
+        assert!(detect_urls("http://\nexample.com").is_empty());
+    }
+
+    #[test]
+    fn scheme_as_final_input_bytes_finds_nothing() {
+        for input in ["see https://", "see http://", "x mailto:", "go git://"] {
+            assert!(detect_urls(input).is_empty(), "input {input:?}");
+        }
+    }
+
+    #[test]
+    fn non_ascii_scheme_bytes_find_nothing() {
+        assert!(detect_urls("ｈttp://example.com").is_empty());
+        assert!(detect_urls("http://\u{a0}example.com").is_empty());
+        let (s, e, url) = one("https://example.com/日本語");
+        assert_eq!(url, "https://example.com/");
+        assert_eq!("https://example.com/日本語".get(s..e), Some(url.as_str()));
+    }
+
+    #[test]
+    fn mailto_port_like_suffix() {
+        let (_, _, url) = one("write mailto:ops@example.com:8080 now");
+        assert_eq!(url, "mailto:ops@example.com:8080");
+        let (_, _, trimmed) = one("contact mailto:a@b.com:");
+        assert_eq!(trimmed, "mailto:a@b.com");
+    }
 }
