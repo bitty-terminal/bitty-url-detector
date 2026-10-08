@@ -471,6 +471,49 @@ mod tests {
     }
 
     #[test]
+    fn readme_example_offsets() {
+        let input = "see https://example.com/a?b=c#d.";
+        let found = detect_urls(input);
+        assert_eq!(
+            found,
+            vec![(4, 31, "https://example.com/a?b=c#d".to_string())]
+        );
+    }
+
+    #[test]
+    fn truncation_cap_boundary() {
+        let exact = format!("http://{}", "a".repeat(MAX_URL_LEN));
+        let found = detect_urls(&exact);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].2.len(), "http://".len() + MAX_URL_LEN);
+        let over = format!("http://{}", "a".repeat(MAX_URL_LEN + 1));
+        let found = detect_urls(&over);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].2.len(), "http://".len() + MAX_URL_LEN);
+        assert!(found[0].1 < over.len());
+        assert_eq!(over.get(found[0].0..found[0].1), Some(found[0].2.as_str()));
+        assert_eq!(found[0].1 - found[0].0, found[0].2.len());
+    }
+
+    #[test]
+    fn url_adjacent_to_unicode_without_space() {
+        let input = "éhttp://example.com/x";
+        let (s, e, url) = one(input);
+        assert_eq!(url, "http://example.com/x");
+        assert_eq!(s, "é".len());
+        assert!(input.is_char_boundary(s));
+        assert!(input.is_char_boundary(e));
+        assert_eq!(input.get(s..e), Some(url.as_str()));
+    }
+
+    #[test]
+    fn scheme_followed_only_by_trimmable_punctuation_finds_nothing() {
+        assert!(detect_urls("https://.").is_empty());
+        assert!(detect_urls("see http://, now").is_empty());
+        assert!(detect_urls("git://").is_empty());
+    }
+
+    #[test]
     fn large_line_scans_without_hang() {
         let mut input = String::new();
         for n in 0..2000 {
