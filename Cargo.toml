@@ -3,6 +3,9 @@ resolver = "2"
 members = [
     "crates/bitty-url-detector",
 ]
+# The cargo-fuzz harness below is dev tooling only: a standalone crate with
+# its own lockfile, excluded so workspace gates ignore its fuzzer deps.
+exclude = ["fuzz"]
 
 [workspace.package]
 version = "0.0.1"

@@ -1,0 +1,31 @@
+[package]
+name = "bitty-url-detector-fuzz"
+version = "0.0.1"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+# Empty workspace table: detaches this dev-tooling crate from any ancestor
+# workspace (the umbrella checkout also defines one), so the fuzzer builds
+# standalone. The root workspace additionally lists fuzz/ under exclude.
+[workspace]
+
+# Dev-tooling harness only: feeds arbitrary input into detect_urls and
+# asserts the documented contract. Never a runtime dependency of the crate.
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = "1"
+
+[dependencies.bitty-url-detector]
+path = "../crates/bitty-url-detector"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[[bin]]
+name = "detect"
+path = "fuzz_targets/detect.rs"
+test = false
+doc = false

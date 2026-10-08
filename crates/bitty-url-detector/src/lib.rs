@@ -199,6 +199,11 @@ fn is_url_byte(b: u8) -> bool {
 /// (`)` `]` `}`) are trimmed only while unbalanced against their opener, so
 /// `(.../Test_(a))` keeps its balanced paren while `(see .../foo)` drops the
 /// prose paren. Panic-free; runs in linear time over the candidate.
+///
+/// Note: `{`, `}`, and `"` never appear in the candidate because the body
+/// scan stops at them (see [`is_url_byte`]), so the `}` and `"` arms below
+/// are unreachable today. They stay as defense-in-depth for future alphabet
+/// edits; `brace_and_quote_bytes_terminate_scan` pins the termination.
 fn trim_trailing(bytes: &[u8], start: usize, end: usize) -> usize {
     let mut open_paren: usize = 0;
     let mut close_paren: usize = 0;
@@ -523,5 +528,136 @@ mod tests {
         }
         let found = detect_urls(&input);
         assert_eq!(found.len(), 2000);
+    }
+
+    #[test]
+    fn scheme_prefix_overlap_is_single_maximal_match() {
+        // The body alphabet contains scheme characters, so a second scheme
+        // prefix inside the body extends the same match (maximal munch).
+        let input = "http://http://example.com";
+        let found = detect_urls(input);
+        assert_eq!(found, vec![(0, input.len(), input.to_string())]);
+        let nested = "mailto:mailto:ops@example.com";
+        let (s, e, url) = one(nested);
+        assert_eq!((s, e), (0, nested.len()));
+        assert_eq!(url, nested);
+    }
+
+    #[test]
+    fn brace_and_quote_bytes_terminate_scan() {
+        // `{`, `}`, and `"` sit outside the URL alphabet, so they end the
+        // body scan before trimming; the `}`/`"` trim arms stay defensive.
+        let (_, _, url) = one("see http://example.com/a}b");
+        assert_eq!(url, "http://example.com/a");
+        let (_, _, url) = one("{http://example.com/a}");
+        assert_eq!(url, "http://example.com/a");
+        let (_, _, url) = one("see http://example.com/a{b");
+        assert_eq!(url, "http://example.com/a");
+        let (_, _, url) = one("see http://example.com/a\"b");
+        assert_eq!(url, "http://example.com/a");
+    }
+
+    #[test]
+    fn mailto_comma_or_punctuation_only_body_finds_nothing() {
+        assert!(detect_urls("mailto:,").is_empty());
+        assert!(detect_urls("mailto:;").is_empty());
+        assert!(detect_urls("mailto:.").is_empty());
+        assert!(detect_urls("contact mailto:, today").is_empty());
+    }
+
+    #[test]
+    fn whitespace_only_and_scheme_only_inputs_find_nothing() {
+        for input in [
+            "",
+            "   ",
+            "\t\n  \n",
+            "http://",
+            "https://",
+            "git://",
+            "mailto:",
+            "visit http://",
+            "http:// ",
+            "git:// ",
+            "mailto: ",
+        ] {
+            assert!(detect_urls(input).is_empty(), "input {input:?}");
+        }
+    }
+
+    #[test]
+    fn punctuation_only_body_finds_nothing() {
+        for input in [
+            "http://...",
+            "http://!!!",
+            "https://???",
+            "https://''",
+            "git://...",
+        ] {
+            assert!(detect_urls(input).is_empty(), "input {input:?}");
+        }
+    }
+
+    #[test]
+    fn non_ascii_byte_terminates_body_scan() {
+        let input = "see http://abécd more";
+        let (s, e, url) = one(input);
+        assert_eq!(url, "http://ab");
+        assert_eq!(input.get(s..e), Some(url.as_str()));
+        assert!(detect_urls("http://éx").is_empty());
+        assert!(detect_urls("mailto:é@example.com").is_empty());
+    }
+
+    #[test]
+    fn truncation_cap_before_multibyte_stays_on_boundary() {
+        // The cap lands on ASCII (the body scan only consumes ASCII bytes),
+        // so `end` is a char boundary even with a multibyte char at the cap.
+        let input = format!("http://{}é https://example.com/y", "a".repeat(MAX_URL_LEN));
+        let found = detect_urls(&input);
+        assert_eq!(found.len(), 2);
+        assert_eq!(found[0].2.len(), "http://".len() + MAX_URL_LEN);
+        assert_eq!(found[0].1 - found[0].0, found[0].2.len());
+        assert_eq!(found[1].2, "https://example.com/y");
+        for (s, e, url) in &found {
+            assert!(input.is_char_boundary(*s), "start {s}");
+            assert!(input.is_char_boundary(*e), "end {e}");
+            assert_eq!(input.get(*s..*e), Some(url.as_str()));
+        }
+    }
+
+    #[test]
+    fn oversized_input_without_scheme_terminates_empty() {
+        let input = "a".repeat(200_000);
+        assert!(detect_urls(&input).is_empty());
+        let digits = "0123456789".repeat(20_000);
+        assert!(detect_urls(&digits).is_empty());
+    }
+
+    #[test]
+    fn empty_match_between_schemes_is_skipped() {
+        let input = "http:// http://example.com/x";
+        let (s, e, url) = one(input);
+        assert_eq!(url, "http://example.com/x");
+        assert_eq!(s, "http:// ".len());
+        assert_eq!(input.get(s..e), Some(url.as_str()));
+    }
+
+    #[test]
+    fn large_mixed_input_scales_linearly() {
+        // Linear-behavior floor without wall-clock assertions: a large mixed
+        // blob (unicode, parens, trailing punctuation) completes and yields
+        // the exact expected count with valid offsets.
+        let mut input = String::new();
+        for n in 0..2000 {
+            input.push_str("café log https://example.com/item-");
+            input.push_str(&n.to_string());
+            input.push_str(" (see https://other.example/x). ");
+        }
+        let found = detect_urls(&input);
+        assert_eq!(found.len(), 4000);
+        for (s, e, url) in &found {
+            assert!(input.is_char_boundary(*s), "start {s}");
+            assert!(input.is_char_boundary(*e), "end {e}");
+            assert_eq!(input.get(*s..*e), Some(url.as_str()));
+        }
     }
 }
