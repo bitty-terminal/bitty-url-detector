@@ -1,6 +1,7 @@
 /target/
 .targets/
 **/target/
+fuzz/artifacts/
 .carryctx/config.local.toml
 .worktrees/
 recording/
