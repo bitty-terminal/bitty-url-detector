@@ -3,3 +3,6 @@
 {"created_at":"2026-10-08T03:05:21.456867578+00:00","id":"01M4CQHYSGRZYJT9TVW6NQSC9T","kind":"include","pattern":"crates/bitty-url-detector/src/lib.rs","project_id":"01M4AJ0B9M6TQH3FV4D79HH62G","task_id":"01M4CPRKQVDJYQQR75A53WF7M0"}
 {"created_at":"2026-10-08T03:05:21.476942148+00:00","id":"01M4CQHYT4S2V4CN743AC47EEX","kind":"include","pattern":"fuzz/*","project_id":"01M4AJ0B9M6TQH3FV4D79HH62G","task_id":"01M4CPRKQVDJYQQR75A53WF7M0"}
 {"created_at":"2026-10-08T03:05:21.497028238+00:00","id":"01M4CQHYTSATH4NSZ8G8QWBSB6","kind":"include","pattern":"benches/scan.rs","project_id":"01M4AJ0B9M6TQH3FV4D79HH62G","task_id":"01M4CPRKQVDJYQQR75A53WF7M0"}
+{"created_at":"2026-10-08T03:27:28.797517437+00:00","id":"01M4CRTF0XE5GFA2FM8CN2Q5V3","kind":"include","pattern":"crates/bitty-url-detector/src/lib.rs","project_id":"01M4AJ0B9M6TQH3FV4D79HH62G","task_id":"01M4CPRKRJNXG4TK0RWRTEGC8Z"}
+{"created_at":"2026-10-08T03:27:28.819983303+00:00","id":"01M4CRTF1MBXTZKBEXN9V747RA","kind":"include","pattern":"README.md","project_id":"01M4AJ0B9M6TQH3FV4D79HH62G","task_id":"01M4CPRKRJNXG4TK0RWRTEGC8Z"}
+{"created_at":"2026-10-08T03:27:28.842263925+00:00","id":"01M4CRTF2AX8Z9F1AEKDHEGEJ8","kind":"include","pattern":"fuzz/README.md","project_id":"01M4AJ0B9M6TQH3FV4D79HH62G","task_id":"01M4CPRKRJNXG4TK0RWRTEGC8Z"}
