@@ -4,7 +4,14 @@ Pure-algorithm plaintext URL detector for Bitty (scanner side of [bitty#1760](ht
 
 ## Status
 
-**v0.0.1, initial detector implementation.** This repository defines the detector API that Bitty Core will consume. It is **not** wired into Core: grid mapping, hover cues, and click-to-open stay Core-owned work under bitty#1760 and are not claimed here.
+**v0.0.1, detector implementation consumed by Core.** This repository defines
+the pure-algorithm detector API that Bitty Core consumes: `bitty-runtime`
+wires `detect_urls` into its plaintext-URL path
+(`crates/bitty-runtime/src/runtime/plaintext_url.rs`) over the same
+`ValidatedUrl` + `ActivationGesture` pipeline as OSC 8 (bitty#1760,
+CTX-1009). Grid mapping, hover cues, and click-to-open stay Core-owned work
+and are not claimed here; this crate holds no terminal-grid, GPU, or window
+types.
 
 ## API
 
